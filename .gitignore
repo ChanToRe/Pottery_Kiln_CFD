@@ -1,0 +1,12 @@
+cases/*/[1-9]*
+cases/*/constant/polyMesh/
+cases/*/constant/triSurface/
+cases/*/processor*/
+cases/*/postProcessing/
+cases/*/log.*
+cases/*/*.foam
+
+*.stl
+
+__pycache__/
+*.pyc

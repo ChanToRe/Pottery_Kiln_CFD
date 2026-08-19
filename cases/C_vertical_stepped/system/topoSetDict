@@ -1,0 +1,25 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+actions
+(
+    {
+        name    fuelbed;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-1.55 -0.6 -0.350) (-0.05 0.6 0.000);
+    }
+    {
+        name    fuelbed;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     fuelbed;
+    }
+);
