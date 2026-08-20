@@ -1,0 +1,5 @@
+steps,x_pos,fuel_kg,finite
+6,6,3667,TRUE
+12,12,3667,TRUE
+20,20,3661,TRUE
+0,30,3619,FALSE

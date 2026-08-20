@@ -1,0 +1,4 @@
+form,desc,fuel_kg,penetration_m
+A,"Horizontal, unstepped",3488,3.563
+B,"Horizontal, stepped",3619,2.988
+C,"Vertical, stepped",3553,1.620
