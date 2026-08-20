@@ -43,11 +43,13 @@ p5 <- ggplot(df, aes(x = x_pos, y = fuel_kg)) +
     xlab("Number of steps on the ware chamber floor") +
     ylab("Fuel consumed (kg)") +
     kiln_theme
-ggsave(here("./Graph/Scatter(Fuel_by_steps).tiff"), p5, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Scatter(Fuel_by_steps).jpeg"), p5, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Scatter(Fuel_by_steps).tiff"), p5, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Scatter(Fuel_by_steps).jpeg"), p5, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
 
 if (is.na(IMG)) {
-    stop("사진이 없다. Data/Firing_Colour_Chart.{png,jpg} 를 두고 다시 실행할 것.")
+    stop("Firing_Colour_Chart.{png,jpg} not found in Data/. ",
+         "The photograph is under third-party copyright and is not distributed here; ",
+         "place your own copy in Data/ and run again.")
 }
 img <- if (grepl("\\.png$", IMG, ignore.case = TRUE)) {
     library(png);  png::readPNG(IMG)
@@ -71,5 +73,5 @@ p_img <- ggplot() +
 
 fig <- p5 + p_img + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
     theme(plot.tag = element_text(family = FONT, size = 13, face = "bold"))
-ggsave(here("./Graph/Fig_Steps.tiff"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Fig_Steps.jpeg"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Fig_Steps.tiff"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Fig_Steps.jpeg"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", quality = 95)

@@ -9,8 +9,8 @@ import rom
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 RESULTS = os.path.join(ROOT, "Results")
-SCHED = os.path.join(ROOT, "cfd", "fuel_schedule.csv")
-CURVE = os.path.join(ROOT, "References", "홍진근2011_표3_승온곡선_digitized.csv")
+SCHED = os.path.join(ROOT, "Data", "fuel_schedule.csv")
+CURVE = os.path.join(ROOT, "Data", "heating_curve_Hong2011.csv")
 
 DT = 60.0
 T_SEAL = 78 * 3600.0
@@ -131,6 +131,7 @@ def energy_budget(rows):
 
 
 PHI_CSV = os.path.join(RESULTS, "rom_phi.csv")
+PHI_REF = os.path.join(ROOT, "Data", "phi_calibration.csv")
 
 
 def save_fit(fit):
@@ -142,9 +143,9 @@ def save_fit(fit):
                      x["target"] - 273.15, x["got"] - 273.15, x["note"]))
 
 
-def load_fit():
+def load_fit(path=None):
     fit = []
-    with open(PHI_CSV) as f:
+    with open(path or PHI_CSV) as f:
         next(f)
         for line in f:
             p = line.rstrip("\n").split(",")
@@ -161,11 +162,12 @@ def main(refit=True):
     ts, Ts = load_curve()
 
     print("── 1. 화구 개구율 역산 (형식 %s, 실측 승온곡선 대조) ──\n" % FIT_FORM)
-    if refit or not os.path.exists(PHI_CSV):
+    if os.environ.get("REFIT") or not os.path.exists(PHI_REF):
         fit = fit_phi(sched, ts, Ts)
         save_fit(fit)
     else:
-        fit = load_fit()
+        fit = load_fit(PHI_REF)
+        save_fit(fit)
     print("%9s %8s %8s %9s %9s %7s" %
           ("구간[h]", "Q[kW]", "φ", "실측[℃]", "계산[℃]", "개구[m2]"))
     for f in fit:

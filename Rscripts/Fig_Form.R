@@ -30,8 +30,8 @@ p1 <- ggplot(df, aes(x = axis, y = fuel_kg)) +
     xlab("Firebox form") +
     ylab("Fuel consumed (kg)") +
     kiln_theme
-ggsave(here("./Graph/Bar(Fuel_by_form).tiff"), p1, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Bar(Fuel_by_form).jpeg"), p1, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Bar(Fuel_by_form).tiff"), p1, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Bar(Fuel_by_form).jpeg"), p1, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
 
 drop <- (df$penetration_m[df$form == "A"] - df$penetration_m[df$form == "C"]) /
          df$penetration_m[df$form == "A"] * 100
@@ -46,10 +46,10 @@ p2 <- ggplot(df, aes(x = axis, y = penetration_m)) +
     xlab("Firebox form") +
     ylab(expression(bold(paste("Penetration of the 1,000 ", degree, "C isosurface (m)")))) +
     kiln_theme
-ggsave(here("./Graph/Bar(Penetration_by_form).tiff"), p2, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Bar(Penetration_by_form).jpeg"), p2, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Bar(Penetration_by_form).tiff"), p2, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Bar(Penetration_by_form).jpeg"), p2, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
 
 fig <- p1 + p2 + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
     theme(plot.tag = element_text(family = FONT, size = 13, face = "bold"))
-ggsave(here("./Graph/Fig_Form.tiff"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Fig_Form.jpeg"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Fig_Form.tiff"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Fig_Form.jpeg"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", quality = 95)

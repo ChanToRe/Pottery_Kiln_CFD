@@ -6,13 +6,17 @@ from paraview.simple import *
 
 paraview.simple._DisableFirstRenderCameraReset()
 
-ROOT = "/home/chanhyeok/Kiln"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "Results", "flame_penetration.csv")
 LEVEL = 1000.0
 
 rows = []
+CASES = {"A": "A_horizontal_unstepped",
+         "B": "B_horizontal_stepped",
+         "C": "C_vertical_stepped"}
+
 for model in ("A", "B", "C"):
-    case = os.path.join(ROOT, "cfd", "%s_L065.cold" % model)
+    case = os.path.join(ROOT, "cases", CASES[model])
     foam = glob.glob("%s/*.foam" % case)
     if not foam:
         foam = [os.path.join(case, "%s.foam" % model)]

@@ -5,8 +5,8 @@ cases/*/processor*/
 cases/*/postProcessing/
 cases/*/log.*
 cases/*/*.foam
-
 *.stl
-
+__pycache__/
+*.pyc
 __pycache__/
 *.pyc

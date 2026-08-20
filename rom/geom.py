@@ -10,9 +10,20 @@ APRON = 1.30
 ZONES = ("stoke", "comb", "ware", "flue")
 
 
+def stl_resolve(base):
+    return base + ".gz" if os.path.exists(base + ".gz") else base
+
+
+def stl_open(path, mode="rt"):
+    if path.endswith(".gz"):
+        import gzip
+        return gzip.open(path, mode)
+    return open(path, mode.replace("t", ""))
+
+
 def read_stl(path):
     solids, name, tri, buf = {}, None, None, []
-    with open(path) as f:
+    with stl_open(path) as f:
         for line in f:
             t = line.split()
             if not t:
@@ -103,7 +114,7 @@ def cross_section_area(walls, x0, tol=1e-4):
 
 def extract(model, mesh_dir=MESH_DIR, seg_m=None):
     L_fire = int(model.split("_L")[1][:3]) / 10.0
-    path = os.path.join(mesh_dir, "kiln_%s.stl" % model)
+    path = stl_resolve(os.path.join(mesh_dir, "kiln_%s.stl" % model))
     s = read_stl(path)
     walls, inlet, outlet = s["walls"], s["inlet"], s["outlet"]
 

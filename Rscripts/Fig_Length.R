@@ -37,8 +37,8 @@ p3 <- ggplot(df, aes(x = length_m, y = fuel_kg)) +
     xlab("Ware chamber length (m)") +
     ylab("Fuel consumed (kg)") +
     kiln_theme
-ggsave(here("./Graph/Scatter(Fuel_by_length).tiff"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Scatter(Fuel_by_length).jpeg"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Scatter(Fuel_by_length).tiff"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Scatter(Fuel_by_length).jpeg"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
 
 f4 <- lm(spread_C ~ length_m, data = df)
 
@@ -53,10 +53,10 @@ p4 <- ggplot(df, aes(x = length_m, y = spread_C)) +
     xlab("Ware chamber length (m)") +
     ylab(expression(bold(paste("Front-to-back temperature difference (", degree, "C)")))) +
     kiln_theme
-ggsave(here("./Graph/Scatter(Spread_by_length).tiff"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Scatter(Spread_by_length).jpeg"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Scatter(Spread_by_length).tiff"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Scatter(Spread_by_length).jpeg"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
 
 fig <- p3 + p4 + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
     theme(plot.tag = element_text(family = FONT, size = 13, face = "bold"))
-ggsave(here("./Graph/Fig_Length.tiff"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Graph/Fig_Length.jpeg"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("./Results/Fig_Length.tiff"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("./Results/Fig_Length.jpeg"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", quality = 95)

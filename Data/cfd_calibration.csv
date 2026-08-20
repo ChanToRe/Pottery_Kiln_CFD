@@ -1,0 +1,7 @@
+# Steady-state calibration values averaged over the last 2000 iterations of
+# each buoyantSimpleFoam run. Extracted from log.solver; the logs themselves
+# are ca. 17 MB each and are not deposited.
+model,mdot,T_bulk,T_out,wall_loss,n
+A_L065,0.880355,445.5500,418.7411,12016.4504,2000
+B_L065,0.887420,446.9488,416.6566,13912.3347,2000
+C_L065,0.937180,403.3024,415.1753,8928.8327,2000

@@ -6,12 +6,36 @@ import geom
 import rom
 
 CFD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cfd_v2")
+CFD_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Data",
+                       "cfd_calibration.csv")
+
+
+def _load_csv():
+    table = {}
+    if not os.path.exists(CFD_CSV):
+        return table
+    with open(CFD_CSV) as f:
+        for line in f:
+            if line.startswith("#") or line.startswith("model"):
+                continue
+            p = line.rstrip("\n").split(",")
+            if len(p) < 6:
+                continue
+            table[p[0]] = dict(mdot=float(p[1]), T_bulk=float(p[2]),
+                               T_out=float(p[3]), wall_loss=float(p[4]),
+                               n=int(p[5]), source="cfd_calibration.csv")
+    return table
+
+
+_CSV = _load_csv()
 
 
 NAVG = 2000
 
 
 def read_cfd(model, navg=NAVG):
+    if model in _CSV:
+        return dict(_CSV[model])
     path = os.path.join(CFD_DIR, model, "log.solver")
     keys = {"mdot": r"sum\(inlet\) of phi = ([-\d.e+]+)",
             "T_bulk": r"volAverage\(region0\) of T = ([\d.e+-]+)",
