@@ -1,7 +1,7 @@
 # Computational fluid dynamics analysis of pottery kiln morphology: a case study from Hanseong-period Baekje, Korea
 
 ## Author
-- Ju, Chanhyeok (Researcher, Seoul National Research Institute of Cultural Heritage)
+- Ju, Chanhyeok (Ph.D Student, Soongsil University)
 
 ## Information
 This repository contains everything needed to reproduce the computations of the study *Computational fluid dynamics analysis of pottery kiln morphology: a case study from Hanseong-period Baekje, Korea*: the geometry generator, the OpenFOAM cases, the reduced-order model, the numerical checks, the scripts that draw every figure and supporting table, and the outputs and solver logs of the published run.
