@@ -56,6 +56,7 @@ PAD = 0.18                                          # 형상 둘레 여백 [m]
 _TS = float(os.environ.get("TEXT_SIZE", "22"))
 ML, MR = int(4.4 * _TS), int(1.1 * _TS)             # 여백 [px], 글자 크기에 비례
 MT, MB = int(1.7 * _TS), int(3.6 * _TS)
+MB0 = int(0.5 * _TS)                                 # OUTER_AXES 에서 가로축 없는 행의 아래 여백 [px]
 P.TEXT_SIZE = _TS
 SEG_SIZE = float(os.environ.get("SEG_TEXT", "18"))     # 구간 온도 숫자 크기 (0 이면 숫자를 넣지 않는다 — 수정본 K30)
 AXC, TXC = (25, 25, 30), (20, 20, 25)
@@ -129,7 +130,8 @@ def margins(col, row, nrow):
     if not OUTER:
         return ML, MB, True, True
     ya, xa = col == 0, row == nrow - 1
-    return (ML if ya else 0), (MB if xa else 0), xa, ya
+    # 가로축이 없는 행도 세로축 '0' 눈금 글자의 아래 절반이 잘리지 않게 글자 높이의 반만큼 남긴다
+    return (ML if ya else 0), (MB if xa else MB0), xa, ya
 
 
 def draw_axes(cv, ox, oz, ml=None, x_axis=True, y_axis=True):

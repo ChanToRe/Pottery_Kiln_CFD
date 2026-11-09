@@ -1,0 +1,10 @@
+Fig1   7.50 × 6.12 in
+Fig2   7.50 × 2.17 in
+Fig3   7.50 × 7.30 in
+Fig4   7.50 × 2.10 in
+[1] TRUE
+[1] TRUE
+Fig6   7.50 × 8.33 in
+Fig7   7.50 × 1.73 in
+Fig8   7.50 × 8.49 in
+→ /home/chanhyeok/Kiln/Last_Version/deposit/Pottery_Kiln_CFD/Results/figures/assembled 

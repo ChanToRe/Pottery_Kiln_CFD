@@ -75,7 +75,7 @@ Without the flow computations, the reduced-order model can be rerun from the dep
 The reduced-order model is deterministic. The flow computations give the same results with the same build of OpenFOAM and the same decomposition. In form C the 1,000 °C isotherm advances and retreats, and its position at a given time depends on the parallel decomposition; the article therefore reports the range over four decompositions. `verify.py` accepts values derived from the flow computations within the tolerances stated in the script.
 
 ## Article ↔ outputs
-Figures are produced as separate panels; their arrangement and lettering in the article were done afterwards. The folder names of the panels follow the numbering of the original submission.
+Figures are produced as separate panels and then assembled into the figures of the article by `Rscripts/assemble_figures.R` (`Results/figures/assembled/Fig1.tif`–`Fig10.tif`, 600 dpi, 7.5 in wide; the last part of the `figures` step). The folder names of the panels follow the numbering of the original submission.
 
 | Article | Output (`Results/`) | Script ← data |
 | --- | --- | --- |
@@ -83,11 +83,12 @@ Figures are produced as separate panels; their arrangement and lettering in the 
 | Fig 2 Geometry by firebox form | `figures/fig1_forms_3d` | `mesh/render_geometry_panels.py` ← `mesh/stl` |
 | Fig 3 CFD by firebox form | `figures/fig2_cfd_panels`, `figures/colorbar_0-1200C.png` | `cfd/post/render_panels.py`, `panel_axes.py` ← transient cases |
 | Fig 4 Geometry by ware chamber length | `figures/fig3_length_3d` | `mesh/render_geometry_panels.py` |
-| Fig 5 Segment temperatures by length | `figures/fig4_length_panels`, `figures/graphs/Fig_Segments_Length` | `rom/panels_length.py`, `Rscripts/Fig_Segments.R` |
-| Fig 6 Geometry by number of steps | `figures/fig5_steps_3d` | `mesh/render_geometry_panels.py` |
-| Fig 7 Segment temperatures by steps | `figures/fig6_steps_panels`, `figures/graphs/Fig_Segments_Steps` | `rom/panels_length.py`, `Rscripts/Fig_Segments.R` |
-| Fig 8 Variables by firebox form | `figures/graphs/Fig_Form` | `Rscripts/Fig_Form.R` ← `Data/Kiln_Form.csv` ← `rom/study_form.csv`, `cfd/flame_penetration_max.csv` |
-| Fig 9 Variables by ware chamber length | `figures/graphs/Fig_Length` | `Rscripts/Fig_Length.R` ← `Data/Kiln_Length.csv` ← `rom/study_length.csv` |
+| Fig 5 Overall length of excavated kilns | `figures/kiln_length/Kiln_Length`, `Kiln_Length_summary.csv` | `Rscripts/Fig_KilnLength.R` ← `Data/yun2024_table2_kilns.csv` |
+| Fig 6 Segment temperatures by length | `figures/fig4_length_panels`, `figures/graphs/Fig_Segments_Length` | `rom/panels_length.py`, `Rscripts/Fig_Segments.R` |
+| Fig 7 Geometry by number of steps | `figures/fig5_steps_3d` | `mesh/render_geometry_panels.py` |
+| Fig 8 Segment temperatures by steps | `figures/fig6_steps_panels`, `figures/graphs/Fig_Segments_Steps` | `rom/panels_length.py`, `Rscripts/Fig_Segments.R` |
+| Fig 9 Variables by firebox form | `figures/graphs/Fig_Form` | `Rscripts/Fig_Form.R` ← `Data/Kiln_Form.csv` ← `rom/study_form.csv`, `cfd/flame_penetration_max.csv` |
+| Fig 10 Variables by ware chamber length | `figures/graphs/Fig_Length` | `Rscripts/Fig_Length.R` ← `Data/Kiln_Length.csv` ← `rom/study_length.csv` |
 | Table 2 Geometrical variables | `mesh/stl_manifest.csv` | `mesh/generate_rev4.py`, `rev4_builder.py`, `kiln_geometry.py` |
 | Table 3 CFD settings, cell counts | `checks/convergence/mesh_quality.csv` | `cases/*/system`, `cases/*/constant`, `mesh/*/system` |
 | Table 4 Variables from the experiment | — | `Data/fuel_schedule.csv`, `heating_curve_Hong2011.csv`, `table4_Hong2011.csv`; constants in `rom/rom.py` |
@@ -104,7 +105,6 @@ Figures are produced as separate panels; their arrangement and lettering in the 
 | S6 Table Grid and time-step tests | `supporting/S6_Table.xlsx` | `cfd/checks/summarize_checks.py` → `checks/grid_steady.csv`, `summary_2-2abd.txt` |
 | S7 Table Operating points | `supporting/S7_Table.xlsx` | `cfd/checks/summarize_checks.py` → `checks/oppoint.csv` |
 | S8 Table Energy balance | `supporting/S8_Table.xlsx` | `rom/energy_audit.py` → `rom/energy_audit.txt`, `energy_audit_series.csv` |
-| Response to Reviewers, Fig R1 Overall length of kilns | `figures/kiln_length/Kiln_Length`, `Kiln_Length_summary.csv` | `Rscripts/Fig_KilnLength.R` ← `Data/yun2024_table2_kilns.csv` |
 
 `Rscripts/make_supporting.py` writes all eight supporting tables; each table states its source file.
 
@@ -112,7 +112,7 @@ Figures are produced as separate panels; their arrangement and lettering in the 
 - `Data/fuel_schedule.csv`: heat-release schedule from the fuel input rates recorded by Hong (2011); the last interval is set by the recorded fuel total of 3,600 kg.
 - `Data/heating_curve_Hong2011.csv`: heating curve of the Yangsan Hogye-dong kiln 2 experiment read off the published graph (Hong 2011, Table 3), about ±30 °C. The model applies it 2 h earlier, to agree with the temperatures tabulated in the same report.
 - `Data/table4_Hong2011.csv`: temperatures tabulated in the report for two measuring points, used only as a check (S3 Table).
-- `Data/yun2024_table2_kilns.csv`: the 69 pottery kilns of the Hanseong period of Baekje in the central region listed in Table 2 of Yun, Ju and Song (2024, *Journal of the Korean Archaeological Society*), with overall length and width; the 45 kilns with both dimensions recorded (excluding one value given in parentheses) are plotted in Fig R1.
+- `Data/yun2024_table2_kilns.csv`: the 69 pottery kilns of the Hanseong period of Baekje in the central region listed in Table 2 of Yun, Ju and Song (2024, *Journal of the Korean Archaeological Society*), with overall length and width; the 45 kilns with both dimensions recorded (excluding one value given in parentheses) are plotted in Fig 5.
 
 ## Viewing in ParaView
 After a case has been run, open the `.foam` file inside it. ParaView decomposes polyhedral cells by default, so the cell count it reports is larger than that of the mesh; turning off `Decompose polyhedra` gives the cell counts of Table 3.

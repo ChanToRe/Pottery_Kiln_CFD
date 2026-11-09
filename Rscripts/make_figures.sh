@@ -1,5 +1,5 @@
 #!/bin/bash
-# 원고 그림의 낱장을 만든다. 배치·제목·글자 삽입은 사용자가 한다.
+# 원고 그림의 낱장을 만들고, 마지막에 Fig 1–10 합본을 만든다 (Rscripts/assemble_figures.R).
 #   Fig 1·3·5  형상 3D       ← mesh/stl              (ParaView)
 #   Fig 2      CFD 온도장    ← cases/<형식>         (ParaView + 축)
 #   Fig 4·6    축소모델 단면 ← rom (rom_phi.csv)     (순수 Python)
@@ -92,7 +92,9 @@ EOF_FC
   echo "=== 종단면 개념도 (2-3a, E-25·R-02) — 형식 B 중심면 + 연소부 A·B·C 확대"
   python3 mesh/section_data.py > $OUT/section_data.txt 2>&1 || { echo "  ★ 단면 자료 실패"; FAIL=1; }
   "$KILN_RSCRIPT" Rscripts/Fig_Section.R > $OUT/graphs/log_Fig_Section.txt 2>&1 && echo "  Fig_Section 완료" || { echo "  ★ Fig_Section 실패"; FAIL=1; }
-  echo "=== 중부지역 백제 한성기 토기 가마 전체 길이 (답변서 Fig R1) ← Data/yun2024_table2_kilns.csv"
+  echo "=== 중부지역 백제 한성기 토기 가마 전체 길이 (원고 Fig 5) ← Data/yun2024_table2_kilns.csv"
   "$KILN_RSCRIPT" Rscripts/Fig_KilnLength.R > $OUT/graphs/log_Fig_KilnLength.txt 2>&1 && echo "  Fig_KilnLength 완료" || { echo "  ★ Fig_KilnLength 실패"; FAIL=1; }
+  echo "=== 원고 그림 합본 Fig 1–10 → $OUT/assembled (앞 단계의 낱장을 씀)"
+  "$KILN_RSCRIPT" Rscripts/assemble_figures.R > $OUT/log_assemble.txt 2>&1 && echo "  합본 완료" || { echo "  ★ 합본 실패"; FAIL=1; }
 fi
 exit $FAIL
