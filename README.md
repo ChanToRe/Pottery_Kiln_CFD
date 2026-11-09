@@ -4,117 +4,115 @@
 - Ju, Chanhyeok (Researcher, Seoul National Research Institute of Cultural Heritage)
 
 ## Information
-This repository organises the case files, code, data and figures used in the study *Computational fluid dynamics analysis of pottery kiln morphology: a case study from Hanseong-period Baekje, Korea*.
+This repository contains everything needed to reproduce the computations of the study *Computational fluid dynamics analysis of pottery kiln morphology: a case study from Hanseong-period Baekje, Korea*: the geometry generator, the OpenFOAM cases, the reduced-order model, the numerical checks, the scripts that draw every figure and supporting table, and the outputs and solver logs of the published run.
 
-The computation is divided into two models. A three-dimensional flow computation on a scale of seconds obtains the path and the temperature of the heated gas reaching the ware chamber, and a reduced-order model covering the whole firing operation receives the convective heat transfer coefficient and the effective hot area from the former and computes the fuel consumption and the temperature on the scale of the whole operation.
+The computation is divided into two models. Steady three-dimensional flow computations at a calibration point give the effective hot area and the reference convective coefficient of each firebox form; a reduced-order model of the whole 78 h firing receives these two quantities and computes the fuel and the temperatures. Transient flow computations over the first 45 s compare how far the hot gas enters the ware chamber.
 
-The repository is structured into seven directories:
-- `mesh` : The nine STL surfaces used in the analysis.
-- `cases` : OpenFOAM case dictionaries for the three firebox forms.
-- `cfd` : Script that measures the penetration depth.
-- `rom` : The reduced-order model and the scripts that drive it.
-- `Rscripts` : Includes R code for graph generation.
-- `Results` : Stores the final visual outputs produced.
-- `Data` : Contains the measured series that drive the model and the tabulated results used by the R code.
+Versions: the tag `Article` is the version deposited with the original submission. The current version corresponds to the revised manuscript.
 
-Reproducing the whole set takes several hours: about 20 minutes per CFD case and ten to forty minutes per reduced-order script on a desktop machine.
+The repository keeps the seven directories of the first version:
 
-## CFD
-
-### Requirements
-```
-OpenFOAM v2312
-Python 3 (standard library only; no external packages)
-ParaView / pvbatch   (required only for flame_penetration.py)
-```
-
-### 1. Mesh and solve
-The nine STL surfaces used in the analysis are deposited in `mesh` as gzip-compressed ASCII (`.stl.gz`, 6.4 MB in total), and the dictionaries deposited in `cases` are the ones actually used. Only the surface has to be placed inside each case.
-
-```bash
-for m in A:A_horizontal_unstepped B:B_horizontal_stepped C:C_vertical_stepped; do
-    s=${m%%:*}; d=${m##*:}
-    mkdir -p cases/$d/constant/triSurface
-    gunzip -c mesh/kiln_${s}_L065.stl.gz > cases/$d/constant/triSurface/kiln.stl
-done
-
-cd cases/A_horizontal_unstepped
-blockMesh && snappyHexMesh -overwrite && topoSet && buoyantPimpleFoam
-```
-`topoSet` creates the `fuelbed` cell zone on which the volumetric heat source of `constant/fvModels` acts, and must not be skipped. One case takes about 20 minutes and writes 46 time directories.
-
-### 2. Penetration depth
-The maximum x of the 1,000 °C isosurface is extracted at each of the 46 time steps.
-
-```bash
-pvbatch cfd/flame_penetration.py
-```
-
-### 3. Reduced-order model
-The model does not take the quantity of fuel as an input; it iteratively computes the fuel input rate required to reproduce the heating curve of the Yangsan Hogye-dong kiln 2 experiment. The calibration must be run first, as it writes `Results/rom_phi.csv`, which every subsequent script reads.
-```bash
-python3 rom/run.py
-```
-By default this adopts the firemouth opening ratios of `Data/phi_calibration.csv`, the fit on which the published figures rest. To solve the inverse problem again instead:
-
-```bash
-REFIT=1 python3 rom/run.py
-```
-Refitting reproduces the first five intervals to four decimal places but returns a value about 2 % lower for the 52–78 h hold, because over that plateau a range of opening ratios reproduces 1,140 °C equally well. The absolute fuel figures then come out about 1 % lower throughout, while the differences between forms and between lengths are unchanged. Each of the following corresponds to one table in the paper. Each takes roughly ten minutes.
-
-```bash
-python3 rom/efficiency.py         # fuel by firebox form            -> rom_efficiency.txt
-python3 rom/form_axial.py         # axial temperature by form        -> rom_form_axial.txt
-python3 rom/length_study.py       # fuel and spread by length        -> rom_length.txt
-python3 rom/study_data.py         # the three series plotted in R    -> study_*.csv
-python3 rom/sensitivity.py        # sensitivity to the assumed values -> rom_sensitivity.txt
-python3 rom/ware_sensitivity.py   # sensitivity to the heat capacity of the load
-```
-
-### Input data
-Three files in `Data` drive the reduced-order model. `fuel_schedule.csv` is the heat release schedule after Hong (2011). `heating_curve_Hong2011.csv` is the heating curve of the Yangsan Hogye-dong kiln 2 experiment read off the published graph; it is a graph reading, not the original tabulated figures, and carries roughly ±30 °C and ±1 h. `cfd_calibration.csv` holds the mass flow rate, bulk temperature, outlet temperature and wall loss of each firebox form, averaged over the last 2,000 iterations of the steady-state runs. Those solver logs are about 17 MB each and are not deposited, so the four averaged quantities are given directly; without them the model cannot distinguish form C and silently substitutes form B. `phi_calibration.csv` holds the firemouth opening ratio fitted against the measured heating curve, described in step 4 above.
-
-### Viewing in ParaView
-ParaView recognises a case when an empty `.foam` file is placed inside it.
-
-```bash
-touch cases/A_horizontal_unstepped/case.foam
-```
-Note that ParaView decomposes polyhedral cells by default, so the cell count is reported as **117,649**, whereas the actual mesh has **52,755** cells. Turning off `Decompose polyhedra` in the reader gives the latter, which is the range of 5.3–5.6 × 10⁴ stated in the paper.
-
-## R Script
-
-The figures of the Discussion were produced in an `R` environment and are saved as `.R` files, with each figure documented in a separate file. Each script reads the tabulated results from `Data`, fits the regressions with `lm()` and writes both TIFF and JPEG to `Results`.
-
-### Requirements
-```
-R version 4.3.3
-ggplot2   3.5.2
-here      1.0.1
-patchwork 1.3.2
-png       0.1.8
-```
-```R
-install.packages(c("ggplot2", "here", "patchwork", "png"))
-```
-
-### Scripts
-| Script | Figure | Data |
-| --- | --- | --- |
-| `Fig_Form.R` | Fuel and penetration depth by firebox form | `Kiln_Form.csv` |
-| `Fig_Length.R` | Fuel and front-to-back temperature difference by ware chamber length | `Kiln_Length.csv` |
-| `Fig_Steps.R` | Fuel by number of steps, paired with the firing-colour photograph | `Kiln_Steps.csv` |
-
-```R
-source("Rscripts/Fig_Form.R")
-source("Rscripts/Fig_Length.R")
-source("Rscripts/Fig_Steps.R")
-```
-
-### Source of the data
-| CSV | Origin |
+| Directory | Contents |
 | --- | --- |
-| `Kiln_Form.csv` (fuel) | `rom/study_data.py` → `Results/study_form.csv` |
-| `Kiln_Form.csv` (penetration) | `cfd/flame_penetration.py`, t ≈ 43 s |
-| `Kiln_Length.csv` | `rom/study_data.py` → `Results/study_length.csv` |
-| `Kiln_Steps.csv` | `rom/study_data.py` → `Results/study_steps.csv` |
+| `mesh` | The STL surfaces (`.stl.gz`), the geometry generator that creates them, the meshing dictionaries and scripts, and the scripts that draw the geometry figures |
+| `cases` | OpenFOAM cases: transient (`A_horizontal_unstepped`, `B_horizontal_stepped`, `C_vertical_stepped`) and steady calibration (`*_steady`) |
+| `cfd` | Scripts that run the cases, post-process them (penetration of the 1,000 °C isotherm, temperature panels), and set up and summarise the numerical checks |
+| `rom` | The reduced-order model, its calibration, the comparisons, the sensitivity analysis and the energy balance |
+| `Rscripts` | R scripts of the graphs, and the scripts that prepare their data, run all figures and write the supporting tables |
+| `Results` | Outputs of the published run: tables and summaries, figure panels, supporting tables and compressed logs of all computations |
+| `Data` | Measured series that drive the model, and the tables plotted by the R scripts |
+
+Top-level files: `run_all.sh` (the whole workflow), `verify.py` (compares a run with the values reported in the article), `paths.sh` (locations of the tools), `setup_env.sh` and `kiln-explicit.txt` (Python and R environments).
+
+## Requirements
+```
+OpenFOAM v2312 (openfoam.com)   blockMesh, snappyHexMesh, buoyantSimpleFoam, buoyantPimpleFoam, mpirun
+ParaView 5.10 (pvbatch)         penetration depth and temperature panels; needs a display (DISPLAY)
+micromamba                      installs the Python and R environments below
+Python 3 (system)               reduced-order model and post-processing (standard library only)
+xz                              log archive
+```
+The locations of OpenFOAM and ParaView are set in `paths.sh` (`KILN_OPENFOAM_BASHRC`, `KILN_PVBATCH`) and can be overridden by environment variables of the same names. The published run used 20 cores; the numerical checks run up to 16 processes at a time (`KILN_BUDGET`).
+
+```bash
+bash setup_env.sh      # env/kiln: Python 3.11 + numpy; R 4.3.3 + ggplot2 3.5.2, here 1.0.1, patchwork 1.3.2, png, jpeg
+                       # env/doc : Python 3.11 + openpyxl 3.1.5 (supporting tables)
+```
+`kiln-explicit.txt` fixes every package of `env/kiln` (linux-64); `bash setup_env.sh --solve` fixes only the main packages.
+
+### Fonts
+The figures use Times New Roman, which cannot be redistributed. Place `times.ttf` (and `timesbd.ttf`) in a folder `fonts/` at the top level. Without it the figures are drawn with another serif font; the numbers are unaffected.
+
+## Running
+```bash
+bash run_all.sh                    # everything, about 13 h on 20 cores
+bash run_all.sh rom figures        # selected steps
+```
+
+| Step | Script | What it does | Time |
+| --- | --- | --- | --- |
+| `geometry` | `mesh/make_stl.sh` | Unpacks `mesh/*.stl.gz` to `mesh/stl/`, regenerates every STL with the generator and checks it against the deposited one | 10 s |
+| `mesh` | `mesh/make_mesh.sh` | blockMesh → snappyHexMesh → checkMesh for A, B, C; copies the mesh into the steady and transient cases | 30 s |
+| `steady` | `cfd/run_steady.sh` | Steady calibration computations (150 kW, firemouth fully open) | 30 min |
+| `transient` | `cfd/run_transient.sh` | Transient computations from a cold kiln (163.3 kW, 0.10 kg/s, 45 s) | 30 min |
+| `transient-np` | `cfd/run_transient_np.sh` | The same transient computations with 4, 8 and 10 parallel subdomains (the base run uses 6) | 100 min |
+| `cfd-post` | `cfd/post/flame_penetration.py`, `penetration_max.py` | Penetration of the 1,000 °C isotherm and its maximum within 45 s | 1 min |
+| `rom` | `rom/run_rom.sh` | Calibration, opening ratios, comparisons of forms, lengths and steps, sensitivity (27 cases), energy balance | 90 min |
+| `checks` | `cfd/checks/*` | Finer grids, maximum Courant number 2, operating points, temperature-limiter swap; convergence, grid quality and balances | 8 h |
+| `figures` | `Rscripts/make_figures.sh` | Figure panels and graphs | 30 min |
+| `supporting` | `Rscripts/make_supporting.py`, `S1_Fig.R` | S1–S8 Table, S1 Fig | 1 min |
+| `logs` | `cfd/archive_logs.sh` | Compresses all logs into `Results/logs` | 5 min |
+| `verify` | `verify.py` | Compares the run with the values of the article | 1 s |
+
+Each step writes its console output to `Results/run/<step>.log`.
+
+Without the flow computations, the reduced-order model can be rerun from the deposited solver logs: `bash run_all.sh geometry rom verify`. The calibration then reads `Results/logs/cases/*_steady/log.solver.xz` and checks that the case dictionaries are those of the logged runs.
+
+### Logs
+`Results/logs` holds the logs of every computation reported in the article, compressed with xz, at the path of the case they come from: `cases/A_horizontal_unstepped_steady/log.solver` → `Results/logs/cases/A_horizontal_unstepped_steady/log.solver.xz`; the numerical checks are under `Results/logs/checks/`. `log.inputs.md5` records the dictionaries and the mesh with which each case was solved. Read a log with `xz -dc <file>`. The computed fields (time directories) are not deposited because of their size; they are regenerated by running the cases.
+
+### Reproducibility
+The reduced-order model is deterministic. The flow computations give the same results with the same build of OpenFOAM and the same decomposition. In form C the 1,000 °C isotherm advances and retreats, and its position at a given time depends on the parallel decomposition; the article therefore reports the range over four decompositions. `verify.py` accepts values derived from the flow computations within the tolerances stated in the script.
+
+## Article ↔ outputs
+Figures are produced as separate panels; their arrangement and lettering in the article were done afterwards. The folder names of the panels follow the numbering of the original submission.
+
+| Article | Output (`Results/`) | Script ← data |
+| --- | --- | --- |
+| Fig 1 Longitudinal section | `figures/section/Fig_Section`, `Firebox_A/B/C` | `Rscripts/Fig_Section.R` ← `mesh/section_data.py` (generator `mesh/kiln_geometry.py`) |
+| Fig 2 Geometry by firebox form | `figures/fig1_forms_3d` | `mesh/render_geometry_panels.py` ← `mesh/stl` |
+| Fig 3 CFD by firebox form | `figures/fig2_cfd_panels`, `figures/colorbar_0-1200C.png` | `cfd/post/render_panels.py`, `panel_axes.py` ← transient cases |
+| Fig 4 Geometry by ware chamber length | `figures/fig3_length_3d` | `mesh/render_geometry_panels.py` |
+| Fig 5 Segment temperatures by length | `figures/fig4_length_panels`, `figures/graphs/Fig_Segments_Length` | `rom/panels_length.py`, `Rscripts/Fig_Segments.R` |
+| Fig 6 Geometry by number of steps | `figures/fig5_steps_3d` | `mesh/render_geometry_panels.py` |
+| Fig 7 Segment temperatures by steps | `figures/fig6_steps_panels`, `figures/graphs/Fig_Segments_Steps` | `rom/panels_length.py`, `Rscripts/Fig_Segments.R` |
+| Fig 8 Variables by firebox form | `figures/graphs/Fig_Form` | `Rscripts/Fig_Form.R` ← `Data/Kiln_Form.csv` ← `rom/study_form.csv`, `cfd/flame_penetration_max.csv` |
+| Fig 9 Variables by ware chamber length | `figures/graphs/Fig_Length` | `Rscripts/Fig_Length.R` ← `Data/Kiln_Length.csv` ← `rom/study_length.csv` |
+| Table 2 Geometrical variables | `mesh/stl_manifest.csv` | `mesh/generate_rev4.py`, `rev4_builder.py`, `kiln_geometry.py` |
+| Table 3 CFD settings, cell counts | `checks/convergence/mesh_quality.csv` | `cases/*/system`, `cases/*/constant`, `mesh/*/system` |
+| Table 4 Variables from the experiment | — | `Data/fuel_schedule.csv`, `heating_curve_Hong2011.csv`, `table4_Hong2011.csv`; constants in `rom/rom.py` |
+| Table 5 Calibrated and assumed variables | `rom/calibration.txt`, `rom/rom_phi.csv` | `rom/calibrate.py`, `rom/run.py` |
+| Fuel and temperatures by form, length, steps | `rom/study_form.csv`, `study_length.csv`, `study_steps.csv` | `rom/study_data.py` |
+| Penetration of the 1,000 °C isotherm | `cfd/flame_penetration.csv`, `cfd/flame_penetration_max.csv`, `cfd/np/flame_penetration_np.csv` | `cfd/post/flame_penetration.py`, `penetration_max.py` |
+| Grid, time step, operating points | `checks/summary_2-2abd.txt`, `checks/grid_steady.csv`, `checks/oppoint.csv` | `cfd/checks/setup_checks.py`, `summarize_checks.py` |
+| S1 Table Classification of quantities | `supporting/S1_Table.xlsx` | `rom/value_classes.py` → `rom/value_classes.csv` |
+| S2 Table Calibration of the opening ratio | `supporting/S2_Table.xlsx` | `rom/run.py` → `rom/rom_phi.csv` |
+| S3 Table Comparison with the report | `supporting/S3_Table.xlsx` | `rom/sensitivity.py` → `rom/sensitivity.txt`; `Data/table4_Hong2011.csv` |
+| S4 Table Sensitivity (27 cases) | `supporting/S4_Table.xlsx` | `rom/sensitivity.py` → `rom/sensitivity_cases.csv` |
+| S5 Table Grid quality, convergence, balances | `supporting/S5_Table.xlsx` | `cfd/checks/convergence_summary.py` → `checks/convergence/`; `cfd/checks/limiter_swap.sh` → `checks/limiter_swap/요약.txt` |
+| S1 Fig Residual histories | `supporting/S1_Fig.tif`, `.jpg` | `Rscripts/S1_Fig.R` ← `checks/convergence/residuals_*.csv` |
+| S6 Table Grid and time-step tests | `supporting/S6_Table.xlsx` | `cfd/checks/summarize_checks.py` → `checks/grid_steady.csv`, `summary_2-2abd.txt` |
+| S7 Table Operating points | `supporting/S7_Table.xlsx` | `cfd/checks/summarize_checks.py` → `checks/oppoint.csv` |
+| S8 Table Energy balance | `supporting/S8_Table.xlsx` | `rom/energy_audit.py` → `rom/energy_audit.txt`, `energy_audit_series.csv` |
+| Response to Reviewers, Fig R1 Overall length of kilns | `figures/kiln_length/Kiln_Length`, `Kiln_Length_summary.csv` | `Rscripts/Fig_KilnLength.R` ← `Data/yun2024_table2_kilns.csv` |
+
+`Rscripts/make_supporting.py` writes all eight supporting tables; each table states its source file.
+
+## Input data
+- `Data/fuel_schedule.csv`: heat-release schedule from the fuel input rates recorded by Hong (2011); the last interval is set by the recorded fuel total of 3,600 kg.
+- `Data/heating_curve_Hong2011.csv`: heating curve of the Yangsan Hogye-dong kiln 2 experiment read off the published graph (Hong 2011, Table 3), about ±30 °C. The model applies it 2 h earlier, to agree with the temperatures tabulated in the same report.
+- `Data/table4_Hong2011.csv`: temperatures tabulated in the report for two measuring points, used only as a check (S3 Table).
+- `Data/yun2024_table2_kilns.csv`: the 69 pottery kilns of the Hanseong period of Baekje in the central region listed in Table 2 of Yun, Ju and Song (2024, *Journal of the Korean Archaeological Society*), with overall length and width; the 45 kilns with both dimensions recorded (excluding one value given in parentheses) are plotted in Fig R1.
+
+## Viewing in ParaView
+After a case has been run, open the `.foam` file inside it. ParaView decomposes polyhedral cells by default, so the cell count it reports is larger than that of the mesh; turning off `Decompose polyhedra` gives the cell counts of Table 3.

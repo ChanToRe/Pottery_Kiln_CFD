@@ -1,0 +1,54 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+fuelbedPorosity
+{
+    type            explicitPorositySource;
+    selectionMode   cellZone;
+    cellZone        fuelbed;
+
+    explicitPorositySourceCoeffs
+    {
+        type            DarcyForchheimer;
+        selectionMode   cellZone;
+        cellZone        fuelbed;
+
+        // Ergun 식: eps=0.55, dp=0.07 m (쪼갠 장작)
+        d               (37259.1 37259.1 37259.1);
+        f               (135.24 135.24 135.24);
+
+        coordinateSystem
+        {
+            type        cartesian;
+            origin      (0 0 0);
+            coordinateRotation
+            {
+                type    axesRotation;
+                e1      (1 0 0);
+                e2      (0 1 0);
+            }
+        }
+    }
+}
+
+heatSource
+{
+    type            scalarSemiImplicitSource;
+    selectionMode   cellZone;
+    cellZone        fuelbed;
+    volumeMode      absolute;
+
+    injectionRateSuSp
+    {
+        h  (150000.0 0);
+    }
+}

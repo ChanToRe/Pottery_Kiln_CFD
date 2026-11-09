@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
+"""
+축소모델 공통 설정과 역문제 — 화구 개구율 φ(t) 역산
+
+화구 개구율 φ 를 연료 구간별로 역산해 실측 승온곡선에 맞춘다
+(형식 B, 소성실 첫 구간 = FIT_NODE 'ware1' 기준). 확정된 φ(t) 는 모든 형식·변형에
+똑같이 적용된다 (조업자 행동을 고정하고 가마 형식만 바꾸는 대조).
+
+rom_phi.csv 는 다른 모든 분석(study_data, efficiency …)이 읽는 공통 입력이다.
+
+    python3 run.py        → Results/rom/rom_phi.csv
+"""
 import os
-import sys
 import math
 
 import calibrate
@@ -8,15 +18,22 @@ import rom
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
-RESULTS = os.path.join(ROOT, "Results")
+RESULTS = os.path.join(ROOT, "Results", "rom")
 SCHED = os.path.join(ROOT, "Data", "fuel_schedule.csv")
 CURVE = os.path.join(ROOT, "Data", "heating_curve_Hong2011.csv")
 
 DT = 60.0
-T_SEAL = 78 * 3600.0
-T_END = 342 * 3600.0
-T_AMB = 292.45
-FIT_FORM = "B"
+T_SEAL = 78 * 3600.0          # 화구·연도 동시 폐쇄 (소성 끝)
+T_AMB = 292.45                # 19.3 ℃ — 가마 건조기간(2009-05-12–22) 평균기온, 소성기 외기의 대용값 (N-61)
+FIT_FORM = "B"                # 역문제를 푸는 형식
+
+# φ 역산 때의 적재 설정 — 기본은 본계산과 같은 값(rom.LOAD_FRAC·BLOCK_FRAC)이다.
+# 투고본의 rom_phi.csv 는 빈 가마(적재 0, 차폐 0)로 역산되었고(2026-08-11 07:32, 그때
+# rom.py 의 LOAD_FRAC 기본값이 0), 모든 비교 계산은 적재 0.5·차폐 0.10 으로 돌아
+# 역산과 본계산의 물리 조건이 달랐다 (오류목록 N-52). 투고본 φ 를 재현하려면
+#   FIT_LOAD_FRAC=0 FIT_BLOCK_FRAC=0 python3 run.py
+FIT_LOAD_FRAC = float(os.environ.get("FIT_LOAD_FRAC", str(rom.LOAD_FRAC)))
+FIT_BLOCK_FRAC = float(os.environ.get("FIT_BLOCK_FRAC", str(rom.BLOCK_FRAC)))
 
 
 def load_curve():
@@ -42,20 +59,35 @@ def curve_at(ts, Ts, t):
     return Ts[-1]
 
 
+# 역산이 실측 승온곡선에 맞출 지점.
+#   comb  연소부 기체 (종전 기본값)
+#   ware1 소성실 앞쪽 구간
+#   ware  소성실 전 구간 평균
+# 홍진근 2011 은 "소성실 4곳, 연도부 1곳" 에서 측정했다고 적으므로 실측 위치는
+# 소성실이다. 종전 기본값(comb)은 위치가 어긋나 있었다.
 FIT_NODE = os.environ.get("FIT_NODE", "ware1")
+# 역산과 본계산이 **같은 분할**을 써야 한다. 분할하지 않으면 노드 1 이 소성실
+# 전체를 뜻하고, 1 m 로 쪼개면 노드 1 이 앞쪽 구간을 뜻한다 — 두 경로가 서로
+# 다른 분할을 쓰면 φ 는 소성실 전체에, 연료는 앞쪽 구간에 맞춰지는 엇갈림이 난다.
 SEG_M = float(os.environ.get("SEG_M", "1.0"))
 
 
 def fit_T(k):
+    """FIT_NODE 가 가리키는 기체온도 [K].
+
+    노드 구성이 두 가지다. 분할하지 않으면 ['comb','ware'] 2개, seg_m 을 주면
+    ['comb','ware1',...,'flue'] 다. 어느 쪽이든 인덱스 1 이 소성실의 앞쪽이다.
+    """
     n = len(k.T)
     if FIT_NODE == "comb" or n < 2:
         return k.T[0]
     if FIT_NODE == "ware1" or n == 2:
         return k.T[1]
-    return sum(k.T[1:n - 1]) / (n - 2)
+    return sum(k.T[1:n - 1]) / (n - 2)      # ware 평균 (comb·flue 제외)
 
 
 def advance(k, sched, t0, t1, phi, rows=None, every=600.0, qmul=1.0):
+    """qmul: 발열률 배수. 온도 이력을 고정하고 연료를 구하는 역문제에 쓴다."""
     n = int(round((t1 - t0) / DT))
     nxt = t0
     for i in range(n):
@@ -68,14 +100,23 @@ def advance(k, sched, t0, t1, phi, rows=None, every=600.0, qmul=1.0):
 
 
 def fit_phi(sched, ts, Ts):
-    k, _ = calibrate.build("%s_L065" % FIT_FORM, seg_m=SEG_M, T_amb=T_AMB)
+    """구간별 이분법. 앞 구간의 종료 상태가 뒤 구간의 초기조건이 된다.
+
+    적재 설정은 FIT_LOAD_FRAC·FIT_BLOCK_FRAC 로 따로 준다 (위 주석 참조).
+    """
+    saved = rom.LOAD_FRAC, rom.BLOCK_FRAC
+    rom.LOAD_FRAC, rom.BLOCK_FRAC = FIT_LOAD_FRAC, FIT_BLOCK_FRAC
+    try:
+        k, _ = calibrate.build("%s_L065" % FIT_FORM, seg_m=SEG_M, T_amb=T_AMB)
+    finally:
+        rom.LOAD_FRAC, rom.BLOCK_FRAC = saved
     bounds = [p[0] for p in sched if p[1] > 0] + [T_SEAL]
     out = []
     for j in range(len(bounds) - 1):
         t0, t1 = bounds[j], bounds[j + 1]
         target = curve_at(ts, Ts, t1)
         state = k.save()
-        lo, hi = 1e-4, 1.0
+        lo, hi = 1e-4, 1.0        # φ 를 키우면 공기가 늘어 온도가 내려간다
 
         def endT(phi):
             k.restore(state)
@@ -88,7 +129,7 @@ def fit_phi(sched, ts, Ts):
             phi, note = lo, "폐쇄한계"
         else:
             for _ in range(18):
-                mid = math.sqrt(lo * hi)
+                mid = math.sqrt(lo * hi)     # 저항이 1/φ² 이므로 로그중점
                 if endT(mid) > target:
                     lo = mid
                 else:
@@ -101,37 +142,7 @@ def fit_phi(sched, ts, Ts):
     return out
 
 
-def phi_at(fit, t):
-    if t >= T_SEAL:
-        return 0.0
-    for f in fit:
-        if t < f["t1"]:
-            return f["phi"]
-    return fit[-1]["phi"]
-
-
-def run_full(model, sched, fit):
-    k, info = calibrate.build(model, seg_m=SEG_M, T_amb=T_AMB)
-    rows = []
-    marks = sorted(set([f["t1"] for f in fit] + [T_SEAL, T_END]))
-    t = 0.0
-    for m in marks:
-        advance(k, sched, t, m, phi_at(fit, t), rows)
-        t = m
-    return k, rows, info
-
-
-def energy_budget(rows):
-    E = [0.0, 0.0, 0.0]
-    for i in range(1, len(rows)):
-        dt = rows[i]["t"] - rows[i - 1]["t"]
-        for j, k in enumerate(("Q", "q_exh", "q_wall")):
-            E[j] += 0.5 * (rows[i][k] + rows[i - 1][k]) * dt
-    return E
-
-
 PHI_CSV = os.path.join(RESULTS, "rom_phi.csv")
-PHI_REF = os.path.join(ROOT, "Data", "phi_calibration.csv")
 
 
 def save_fit(fit):
@@ -143,9 +154,9 @@ def save_fit(fit):
                      x["target"] - 273.15, x["got"] - 273.15, x["note"]))
 
 
-def load_fit(path=None):
+def load_fit():
     fit = []
-    with open(path or PHI_CSV) as f:
+    with open(PHI_CSV) as f:
         next(f)
         for line in f:
             p = line.rstrip("\n").split(",")
@@ -162,12 +173,11 @@ def main(refit=True):
     ts, Ts = load_curve()
 
     print("── 1. 화구 개구율 역산 (형식 %s, 실측 승온곡선 대조) ──\n" % FIT_FORM)
-    if os.environ.get("REFIT") or not os.path.exists(PHI_REF):
+    if refit or not os.path.exists(PHI_CSV):
         fit = fit_phi(sched, ts, Ts)
         save_fit(fit)
     else:
-        fit = load_fit(PHI_REF)
-        save_fit(fit)
+        fit = load_fit()
     print("%9s %8s %8s %9s %9s %7s" %
           ("구간[h]", "Q[kW]", "φ", "실측[℃]", "계산[℃]", "개구[m2]"))
     for f in fit:
@@ -176,71 +186,7 @@ def main(refit=True):
                f["target"] - 273.15, f["got"] - 273.15,
                f["phi"] * 0.5538, f["note"]))
 
-    print("\n── 2. 전 공정 342 h (φ 동일 적용) ──\n")
-    out = {}
-    for t in "ABC":
-        m = "%s_L065" % t
-        k, rows, info = run_full(m, sched, fit)
-        out[t] = (k, rows, info)
-        with open(os.path.join(RESULTS, "rom_%s.csv" % m), "w") as f:
-            f.write("t_h,T_comb_C,T_flue_C,dT_C,mdot,phi,Q_kW,q_wall_kW,"
-                    "q_exh_kW,stored_GJ\n")
-            for r in rows:
-                f.write("%.4f,%.1f,%.1f,%.1f,%.4f,%.4f,%.1f,%.2f,%.2f,%.4f\n" %
-                        (r["t"] / 3600, r["T_comb"] - 273.15, r["T_flue"] - 273.15,
-                         r["dT"], r["mdot"], r["phi"], r["Q"] / 1e3,
-                         r["q_wall"] / 1e3, r["q_exh"] / 1e3, r["stored"] / 1e9))
-        print("  %s 저장 (%d행)" % (m, len(rows)))
-
-    L = []
-    L.append("축소모델 결과 — L065, φ(t) 는 %s 형식에서 역산해 세 형식에 공통 적용" % FIT_FORM)
-    L.append("(조업자 행동을 고정하고 가마 형식만 바꾼 대조)\n")
-    L.append("%-4s %7s %7s %8s %8s %9s %9s %8s %8s" %
-             ("형식", "연돌고", "유입", "최고T", "봉인T", "91h", "342h", "축열", "배기"))
-    L.append("%-4s %7s %7s %8s %8s %9s %9s %8s %8s" %
-             ("", "[m]", "[kg/s]", "[℃]", "[℃]", "[℃]", "[℃]", "[GJ]", "[%]"))
-    for t in "ABC":
-        k, rows, info = out[t]
-        def at(h):
-            return min(rows, key=lambda r: abs(r["t"] - h * 3600))
-        peak = max(rows, key=lambda r: r["T_comb"])
-        E_in, E_exh, E_wall = energy_budget(rows)
-        L.append("%-4s %7.2f %7.3f %8.0f %8.0f %9.0f %9.0f %8.2f %8.1f" %
-                 (t, k.H, at(70)["mdot"], peak["T_comb"] - 273.15,
-                  at(77.9)["T_comb"] - 273.15, at(91)["T_comb"] - 273.15,
-                  at(342)["T_comb"] - 273.15,
-                  max(r["stored"] for r in rows) / 1e9, 100 * E_exh / E_in))
-
-    L.append("\n── 실측 대조 (피팅에 쓰지 않은 독립 검증) ──")
-    L.append("%-22s %14s %14s" % ("항목", "실측", "계산 (A/B/C)"))
-    fired = dict((t, [r for r in out[t][1] if r["t"] <= T_SEAL]) for t in "ABC")
-    L.append("%-22s %14s %14s" %
-             ("폐쇄 직전 연소실-연도 ΔT", "120 ℃ 내외",
-              " / ".join("%.0f" % min(fired[t], key=lambda r: abs(r["t"] - 77.9 * 3600))["dT"]
-                         for t in "ABC")))
-    L.append("%-22s %14s %14s" %
-             ("최대 연소실-연도 ΔT", "300 ℃",
-              " / ".join("%.0f" % max(r["dT"] for r in fired[t]) for t in "ABC")))
-    L.append("%-22s %14s %14s" %
-             ("최고온도", "1,205 ℃",
-              " / ".join("%.0f" % max(r["T_comb"] - 273.15 for r in fired[t]) for t in "ABC")))
-    L.append("%-22s %14s %14s" %
-             ("화구 개구면적", "기록 없음",
-              "%.3f m2 (%.0fx%.0f cm)" % (fit[-1]["phi"] * 0.5538,
-                                          100 * (fit[-1]["phi"] * 0.5538) ** 0.5,
-                                          100 * (fit[-1]["phi"] * 0.5538) ** 0.5)))
-    L.append("  → docs/03 이 정상상태 CFD 의 λ 역산으로 독립 추정한 값: 0.06 m2 (25x25 cm)")
-
-    E_in, E_exh, E_wall = energy_budget(out["B"][1])
-    L.append("\n에너지 수지 (B, 342 h): 투입 %.2f GJ = 배기 %.2f + 벽체 %.2f GJ  (닫힘 %.2f %%)"
-             % (E_in / 1e9, E_exh / 1e9, E_wall / 1e9,
-                100 * (E_exh + E_wall) / E_in))
-    L.append("실측 총 연료 3,600 kg x 14.7 MJ/kg = 52.92 GJ")
-    txt = "\n".join(L)
-    print("\n" + txt)
-    with open(os.path.join(RESULTS, "rom_summary.txt"), "w") as f:
-        f.write(txt + "\n")
-    return out, fit, sched, (ts, Ts)
+    return fit, sched, (ts, Ts)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,63 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p_rgh
+    {
+        solver          GAMG;
+        tolerance       1e-7;
+        relTol          0.01;
+        smoother        GaussSeidel;
+    }
+
+    "(U|h|e|k|omega)"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+}
+
+SIMPLE
+{
+    momentumPredictor yes;
+    nNonOrthogonalCorrectors 1;
+    pRefCell        0;
+    pRefValue       101325;
+
+    residualControl
+    {
+        p_rgh           1e-4;
+        U               1e-4;
+        h               1e-4;
+        e               1e-4;
+        "(k|omega)"     1e-4;
+    }
+}
+
+relaxationFactors
+{
+    fields
+    {
+        rho             1.0;
+        p_rgh           0.4;
+    }
+    equations
+    {
+        U               0.5;
+        h               0.7;
+        e               0.7;
+        "(k|omega)"     0.5;
+    }
+}

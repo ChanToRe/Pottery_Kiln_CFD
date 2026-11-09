@@ -1,0 +1,36 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+heatSource
+{
+    // 연료층 상면 화염층 — 공기가 연료 위를 스치며 표면에서 탄다 (표면연소)
+    type            scalarSemiImplicitSource;
+    selectionMode   cellZone;
+    cellZone        flame;
+    volumeMode      absolute;
+
+    injectionRateSuSp
+    {
+        h  (150000.0 0);
+    }
+}
+
+limitT
+{
+    // 초기 과도에서 국부 온도가 튀어 thermo::calculate 가 터지는 것을 막는다.
+    // 수렴해 확립된 해에는 걸리지 않아야 한다 — 걸린 셀이 남아 있으면
+    // 그 해는 신뢰할 수 없다. log 의 "Lower/Upper limited" 를 확인할 것.
+    type            limitTemperature;
+    selectionMode   all;
+    min             270;
+    max             2600;
+}

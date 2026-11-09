@@ -1,0 +1,11 @@
+stl_file,generator,source_name,md5,used_by
+kiln_A_L065.stl,generate_rev4.py,kiln_A_L065.stl,3ea76d6ffaa8eeae21f22eb88e957d37,"cfd mesh; rom; Fig 1"
+kiln_B_L025.stl,generate_rev4.py,kiln_B_L025.stl,a703c99c575a1af53fa652f4827f1993,"rom (length); Fig 3"
+kiln_B_L045.stl,generate_rev4.py,kiln_B_L045.stl,a627fec87885e2120063a532aa46ad0e,"rom (length); Fig 3"
+kiln_B_L065.stl,kiln_geometry.py,kiln_B_L065.stl,ea8ec55569dd2296518c25fa053bd581,"rom (B, length 6.5 m, steps 0); Fig 1/3/5"
+kiln_B_L065_S12.stl,kiln_geometry.py,kiln_B_L065_S12.stl,8715743f2cb3acd3fd94d91cca1850e1,"rom (steps); Fig 5"
+kiln_B_L065_S20.stl,kiln_geometry.py,kiln_B_L065_S20.stl,64b8fa3f563405838fb9593343240b5f,"rom (steps); Fig 5"
+kiln_B_L065_S6.stl,kiln_geometry.py,kiln_B_L065_S6.stl,712625f5a8ff43055eea987a6e75bd8f,"rom (steps); Fig 5"
+kiln_B_L065_cfd.stl,generate_rev4.py,kiln_B_L065.stl,4ed7e14d917c462a3ae79b309adfd624,"cfd mesh (B)"
+kiln_B_L085.stl,generate_rev4.py,kiln_B_L085.stl,9d238fb5a30ccaa6193625fee8a25091,"rom (length); Fig 3"
+kiln_C_L065.stl,generate_rev4.py,kiln_C_L065.stl,26ef9d13eca83bc3a389c30ce76f5d04,"cfd mesh; rom; Fig 1"

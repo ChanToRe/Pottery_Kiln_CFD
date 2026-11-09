@@ -1,0 +1,44 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+    {
+        name    fuelbed;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-1.55 -0.6 -0.350) (-0.05 0.6 0.000);
+    }
+    {
+        name    fuelbed;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     fuelbed;
+    }
+    {
+        name    flame;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-1.55 -0.6 0.000) (-0.05 0.6 0.200);
+    }
+    {
+        name    flame;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     flame;
+    }
+
+);

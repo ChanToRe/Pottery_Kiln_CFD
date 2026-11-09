@@ -1,6 +1,20 @@
 #!/usr/bin/env python3
+"""
+비교 연구의 수치를 한 번에 계산해 CSV 로 남긴다.
+
+그림 스크립트가 제각기 축소모델을 다시 돌리면 보정이 바뀔 때마다 어긋난다.
+계산은 여기서 한 번만 하고, 그림은 이 CSV 만 읽는다.
+
+    python3 study_data.py            (rom_phi.csv 가 먼저 있어야 한다 — run.py)
+
+출력
+    Results/rom/study_length.csv   소성실 길이 4수준
+    Results/rom/study_steps.csv    소성실 단 4수준
+    Results/rom/study_form.csv     연소부 형식 3종
+    Results/rom/study_fuel_exact.csv  위 세 표의 연료량 정밀값 (그래프 자료의 kg 정수 반올림용.
+                                      표는 0.1 kg 까지만 적으므로 다시 반올림하면 두 번 반올림이 된다)
+"""
 import os
-import sys
 
 import efficiency
 import rom
@@ -13,8 +27,11 @@ SEG = 1.0
 def one(model, fit, sched, ts, Ts):
     k, rows, _ = efficiency.demand(model, fit, sched, ts, Ts, seg_m=SEG)
     fuel = sum(r["fuel"] for r in rows)
-    lam = min(r["lam"] for r in rows)
-    lam_i = min(r["lam_min"] for r in rows)
+    # λ 는 두 가지로 잰다. 이름을 뭉뚱그리면 경로마다 다른 값이 나오고
+    # 실제로 그랬다 — efficiency.py 는 순간 최솟값, 여기는 구간평균의
+    # 최솟값을 "λ최소" 라 부르고 있었다 (1.11 대 1.34).
+    lam = min(r["lam"] for r in rows)               # 구간평균 중 최솟값
+    lam_i = min(r["lam_min"] for r in rows)         # 순간 최솟값
     mw = sum(w.m_cp for w in k.ware) / rom.WARE_CP
     w = [k.T[i] - 273.15 for i in range(1, len(k.T) - 1)]
     mu = sum(w) / len(w)
@@ -39,6 +56,7 @@ def main():
         ("study_form.csv", "form",
          [("A_L065", 1), ("B_L065", 2), ("C_L065", 3)]),
     ]
+    exact = []
     for fn, key, items in sets:
         out = []
         for m, v in items:
@@ -47,6 +65,7 @@ def main():
             d[key] = v
             d["model"] = m
             out.append(d)
+            exact.append((fn[len("study_"):-len(".csv")], m, d["fuel"]))
         p = os.path.join(R, fn)
         with open(p, "w") as f:
             f.write("model,%s,fuel_kg,lambda_segmean_min,lambda_inst_min,ware_kg,T_front_C,T_back_C,"
@@ -58,23 +77,12 @@ def main():
                            d["comb"], d["flue"], d["H"],
                            " ".join("%.0f" % x for x in d["T"])))
         print("→ %s" % p)
-        publish(p, fn)
-
-
-PUBLISH = {
-    "study_form.csv":   ["result_1"],
-    "study_length.csv": ["result_2"],
-    "study_steps.csv":  ["result_3"],
-}
-
-
-def publish(src, fn):
-    import shutil
-    for r in PUBLISH.get(fn, []):
-        d = os.path.join(R, r, "data")
-        if os.path.isdir(d):
-            shutil.copy2(src, os.path.join(d, fn))
-            print("   ↳ %s/data/%s" % (r, fn))
+    p = os.path.join(R, "study_fuel_exact.csv")
+    with open(p, "w") as f:
+        f.write("study,model,fuel_kg\n")
+        for s, m, v in exact:
+            f.write("%s,%s,%.6f\n" % (s, m, v))
+    print("→ %s" % p)
 
 
 if __name__ == "__main__":

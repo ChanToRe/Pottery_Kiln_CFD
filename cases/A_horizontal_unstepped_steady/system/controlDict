@@ -1,0 +1,109 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     buoyantSimpleFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         15000;
+deltaT          1;
+writeControl    runTime;
+writeInterval   500;
+purgeWrite      2;
+writeFormat     ascii;
+writePrecision  7;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable true;
+
+functions
+{
+    outletFlux
+    {
+        type            surfaceFieldValue;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    timeStep;
+        writeInterval   50;
+        log             true;
+        writeFields     false;
+        regionType      patch;
+        name            outlet;
+        operation       sum;
+        fields          ( phi );
+    }
+
+    outletT
+    {
+        type            surfaceFieldValue;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    timeStep;
+        writeInterval   50;
+        log             true;
+        writeFields     false;
+        regionType      patch;
+        name            outlet;
+        operation       areaAverage;
+        fields          ( T );
+    }
+
+    inletFlux
+    {
+        type            surfaceFieldValue;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    timeStep;
+        writeInterval   50;
+        log             true;
+        writeFields     false;
+        regionType      patch;
+        name            inlet;
+        operation       sum;
+        fields          ( phi );
+    }
+
+    // 유량이 계산 결과이므로 화구 유입량을 반드시 감시한다
+    inletP
+    {
+        type            surfaceFieldValue;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    timeStep;
+        writeInterval   50;
+        log             true;
+        writeFields     false;
+        regionType      patch;
+        name            inlet;
+        operation       areaAverage;
+        fields          ( p_rgh );
+    }
+
+    wallHeatFlux
+    {
+        type            wallHeatFlux;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+        patches         ( walls );
+    }
+
+    // 소성부 전체 평균온도
+    volT
+    {
+        type            volFieldValue;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    timeStep;
+        writeInterval   50;
+        log             true;
+        writeFields     false;
+        regionType      all;
+        operation       volAverage;
+        fields          ( T );
+    }
+}

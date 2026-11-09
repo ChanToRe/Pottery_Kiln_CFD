@@ -1,3 +1,6 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -6,33 +9,34 @@ FoamFile
     location    "0";
     object      T;
 }
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 dimensions [0 0 0 1 0 0 0];
 
-internalField uniform 288.0;
+internalField uniform 292.45;
 
 boundaryField
 {
     inlet
     {
         type                    fixedValue;
-        value                   uniform 288.0;
+        value                   uniform 292.45;
     }
     outlet
     {
         type                    inletOutlet;
-        inletValue              uniform 288.0;
-        value                   uniform 288.0;
+        inletValue              uniform 292.45;
+        value                   uniform 292.45;
     }
     walls
     {
         type                    externalWallHeatFluxTemperature;
         mode                    coefficient;
         h                       uniform 10.0;
-        Ta                      uniform 288.0;
+        Ta                      uniform 292.45;
         thicknessLayers         (0.35);
         kappaLayers             (1.0);
         kappaMethod             fluidThermo;
-        value                   uniform 288.0;
+        value                   uniform 292.45;
     }
 }

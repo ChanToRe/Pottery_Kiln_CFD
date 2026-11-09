@@ -1,0 +1,18 @@
+overall_length       10.087  중심면 수평 길이 (화구 앞끝 ~ 연도 끝)
+ware_length           6.500  Table 2 L (경사 길이)
+slope_deg            15.000  Table 2 θ
+firemouth_tunnel      1.300  kiln_geometry.APRON
+firebox_length        1.600  kiln_geometry.L_COMB
+firemouth_height      0.700  kiln_geometry.H_STOKE
+firebox_height        0.950  kiln_geometry.H_COMB (소성실 바닥 기준 천장)
+ware_height           1.100  kiln_geometry.H_MAX
+h_step_B              0.350  Table 2 h_step
+h_drop_C              0.550  Table 2 h_drop
+wall                  0.350  Table 2 t_w
+fuel_bed              0.350  Table 2 h_fuel, topoSetDict 연료층 높이
+fuel_x0               1.330  topoSetDict
+fuel_x1               2.830  topoSetDict
+step_x                2.880  연소부/소성부 경계 x = 0
+firebox_x             1.280  화구/연소부 경계
+floor_B_z             0.000  
+flue_angle           68.000  kiln_geometry.FLUE_ANG

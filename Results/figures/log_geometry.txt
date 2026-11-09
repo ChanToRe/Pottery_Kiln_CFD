@@ -1,0 +1,17 @@
+anchor kiln_A_L065  bounds (-2.9000000953674316, 7.214737892150879, -1.0988960266113281, 1.100000023841858, 0.0, 3.539781093597412)  span 10.11
+[forms]
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig1_forms_3d/form_A_3d.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig1_forms_3d/form_B_3d.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig1_forms_3d/form_C_3d.png
+anchor kiln_B_L085  bounds (-2.9000000953674316, 9.146589279174805, -1.0988960266113281, 1.100000023841858, -0.3499999940395355, 4.0574188232421875)  span 12.05
+[length]
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig3_length_3d/length_L025.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig3_length_3d/length_L045.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig3_length_3d/length_L065.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig3_length_3d/length_L085.png
+anchor kiln_B_L065  bounds (-2.8798611164093018, 7.207157135009766, -1.0980370044708252, 1.100000023841858, -0.3499999940395355, 3.5210180282592773)  span 10.09
+[steps]
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig5_steps_3d/steps_S00.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig5_steps_3d/steps_S06.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig5_steps_3d/steps_S12.png
+  wrote /home/chanhyeok/Kiln/Last_Version/deposit/test_run/Results/figures/fig5_steps_3d/steps_S20.png

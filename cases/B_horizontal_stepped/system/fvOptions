@@ -1,3 +1,6 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -5,6 +8,7 @@ FoamFile
     class       dictionary;
     object      fvOptions;
 }
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 heatSource
 {
@@ -15,6 +19,17 @@ heatSource
 
     injectionRateSuSp
     {
-        h  (166666.7 0);
+        h  (163333.3 0);    // 40 kg/h × 14.7 MJ/kg (45–50 h 투입률). 투고본은 15 MJ/kg 로 166.7 kW (N-06)
     }
+}
+
+limitT
+{
+    // 비정상 냉시동에서 연소부 국부 온도가 폭주해 thermo::calculate 가 터지는 것을 막는다.
+    // C 는 이것 없이 14 s 부근에서 멈춘다(results/checks/transient_C) — 13·24 s 대에만 걸린다.
+    // 정상 보정 케이스와 같은 범위다. 걸린 셀 수는 log 의 "Upper limited" 로 확인할 것.
+    type            limitTemperature;
+    selectionMode   all;
+    min             270;
+    max             2600;
 }

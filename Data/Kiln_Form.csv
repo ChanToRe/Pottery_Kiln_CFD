@@ -1,4 +1,4 @@
-form,desc,fuel_kg,penetration_m
-A,"Horizontal, unstepped",3488,3.563
-B,"Horizontal, stepped",3619,2.988
-C,"Vertical, stepped",3553,1.620
+form,desc,fuel_kg,penetration_m,pen_min_m,pen_max_m
+A,"Horizontal, unstepped",3463,3.456,3.456,3.456
+B,"Horizontal, stepped",3600,2.892,2.890,2.910
+C,"Vertical, stepped",3506,2.618,1.869,2.618

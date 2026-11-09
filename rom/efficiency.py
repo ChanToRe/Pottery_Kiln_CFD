@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+"""
+비교 1 — 연소부 형식별 연료 효율
+
+질문: **동일한 소성 절차에서 형식별로 연료가 얼마나 더 드는가?**
+
+지금까지의 계산은 연료를 실측값으로 고정하고 온도를 봤다. 그건 효율 질문에
+답하지 못한다. 방향을 뒤집는다.
+
+    고정: 소성 절차 — 구간 시각(0-26-40-45-50-52-78 h),
+          목표 온도 이력(실측 승온곡선), 화구 개구율 φ(t)
+    미지: 구간별 발열률 배수 m_j
+    방법: 구간별 이분법. 앞 구간 종료 상태가 뒤 구간 초기조건
+    산출: 총 연료 [kg] 와 실측 3,600 kg 대비 증감
+
+연소 공기 검산도 함께 낸다. 발열만 키우면 모델은 얼마든 온도를 올리지만,
+실제로는 **공기가 있어야 탄다.** 공기비 λ = 실제공기/이론공기 가 1 아래로
+내려간 구간이 있으면 그 해는 물리적으로 성립하지 않는다.
+"""
 import os
 import sys
 
@@ -6,11 +24,18 @@ import calibrate
 import rom
 import run
 
-AIR_PER_WOOD = 6.0
-LAM_MIN = 1.0
+# 이론 공기량 [kg 공기 / kg 습윤 땔감]. 연료율(Q/LHV_EFF)이 습윤 땔감 기준이므로 공기량도
+# 같은 기준이어야 한다. 투고본은 건조 땔감 기준 6.0 을 습윤 땔감에 곱해 λ 를 약 1.2 배
+# 낮게 셈했다 (오류목록 N-13·N-65). rom.AFR_WET = Ragland 1991 표 3 침엽수 조성 + 함수율 20 % → 5.17.
+AIR_PER_WOOD = rom.AFR_WET
+LAM_MIN = 1.0               # 이 아래면 연소 불가
 
 
 def demand(model, fit, sched, ts, Ts, verbose=False, seg_m=None, **over):
+    """형식별 구간 연료 소요량. φ(t) 는 fit 그대로 고정한다.
+
+    seg_m 을 주지 않으면 run.SEG_M 을 따른다 — 역산과 분할을 맞추기 위해서다.
+    """
     if seg_m is None:
         seg_m = run.SEG_M
     kw = dict(T_amb=run.T_AMB)
@@ -40,13 +65,14 @@ def demand(model, fit, sched, ts, Ts, verbose=False, seg_m=None, **over):
                     hi = mid
             m, note = 0.5 * (lo + hi), ""
 
+        # 확정된 배수로 다시 전진시키며 공기비를 재둔다
         k.restore(state)
         n = int(round((t1 - t0) / run.DT))
         md_sum, lam_min, lam_sum = 0.0, 1e9, 0.0
         Q0 = rom.Q_at(sched, t0)
         for i in range(n):
             r = k.step(run.DT, m * Q0, phi)
-            fuel_rate = m * Q0 / rom.LHV_EFF
+            fuel_rate = m * Q0 / rom.LHV_EFF                  # [kg/s]
             lam = r["mdot"] / (AIR_PER_WOOD * fuel_rate) if fuel_rate > 0 else 1e9
             lam_min = min(lam_min, lam)
             lam_sum += lam
@@ -64,11 +90,18 @@ def demand(model, fit, sched, ts, Ts, verbose=False, seg_m=None, **over):
 
 
 def total(model, fit, sched, ts, Ts, seg_m=None, **over):
+    """총 연료만 필요할 때. **demand() 를 그대로 부른다.**
+
+    예전에는 같은 이분법을 따로 구현해 두었는데, 반복수가 20 회 대 16 회로 달라
+    같은 형식의 총량이 경로에 따라 1 % 어긋났다. 같은 문제를 푸는 절차를 둘로
+    두지 않는다.
+    """
     _, rows, _ = demand(model, fit, sched, ts, Ts, seg_m=seg_m, **over)
     return sum(r["fuel"] for r in rows)
 
 
 def sens():
+    """연료 차이가 모델 불확실도를 넘는가 — 형식 간 차폭의 안정성을 본다."""
     sched = rom.load_schedule(run.SCHED)
     fit = run.load_fit()
     ts, Ts = run.load_curve()
@@ -107,7 +140,7 @@ def sens():
     txt = "\n".join(L)
     with open(os.path.join(run.RESULTS, "rom_efficiency_sens.txt"), "w") as f:
         f.write(txt + "\n")
-    print("\n→ Results/rom_efficiency_sens.txt")
+    print("\n→ Results/rom/rom_efficiency_sens.txt")
 
 
 def main():
@@ -175,7 +208,7 @@ def main():
     print(txt)
     with open(os.path.join(run.RESULTS, "rom_efficiency.txt"), "w") as f:
         f.write(txt + "\n")
-    print("\n→ Results/rom_efficiency.txt")
+    print("\n→ Results/rom/rom_efficiency.txt")
     return res
 
 

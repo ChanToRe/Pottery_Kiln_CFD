@@ -4,7 +4,7 @@ library(patchwork)
 
 FONT <- "Times New Roman"
 
-df <- read.csv(here("./Data/Kiln_Length.csv"), fileEncoding = "UTF-8")
+df <- read.csv(here("Data/Kiln_Length.csv"), fileEncoding = "UTF-8")
 
 kiln_theme <- theme_bw() +
     theme(text = element_text(family = FONT),
@@ -14,6 +14,7 @@ kiln_theme <- theme_bw() +
         axis.text = element_text(size = 10, colour = "black"),
         panel.grid.minor = element_blank())
 
+# 회귀식은 그림 안에 적는다. 값을 손으로 옮기지 않고 lm 에서 바로 꺼낸다.
 eqn <- function(fit, ydigits = 1) {
     b <- coef(fit)
     sprintf("y = %s x %s %s\nR² = %.4f",
@@ -23,12 +24,14 @@ eqn <- function(fit, ydigits = 1) {
             summary(fit)$r.squared)
 }
 
+########## 3. Fuel vs ware chamber length ##########
 f3 <- lm(fuel_kg ~ length_m, data = df)
 
 p3 <- ggplot(df, aes(x = length_m, y = fuel_kg)) +
-
-    geom_smooth(method = "lm", formula = y ~ x, se = TRUE, fullrange = TRUE,
-                colour = "red", fill = "grey70", alpha = 0.5, linewidth = 0.7) +
+    # 신뢰구간 띠는 뺀다 — 결정론적 계산값 네 개의 회귀라 수치 예측의 불확실성이 아니다 (E-28).
+    # fullrange: 회귀선을 축 끝까지 늘인다 (기본은 자료 구간까지만).
+    geom_smooth(method = "lm", formula = y ~ x, se = FALSE, fullrange = TRUE,
+                colour = "red", linewidth = 0.7) +
     geom_point(colour = "black", size = 2.6) +
     annotate("text", x = 8.7, y = 2780, hjust = 1, vjust = 0, size = 3.6,
              family = FONT, label = eqn(f3)) +
@@ -37,15 +40,17 @@ p3 <- ggplot(df, aes(x = length_m, y = fuel_kg)) +
     xlab("Ware chamber length (m)") +
     ylab("Fuel consumed (kg)") +
     kiln_theme
-ggsave(here("./Results/Scatter(Fuel_by_length).tiff"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Results/Scatter(Fuel_by_length).jpeg"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("Results/figures/graphs/Scatter(Fuel_by_length).tiff"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("Results/figures/graphs/Scatter(Fuel_by_length).jpeg"), p3, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
 
+########## 4. Front-to-back temperature difference vs length ##########
 f4 <- lm(spread_C ~ length_m, data = df)
 
 p4 <- ggplot(df, aes(x = length_m, y = spread_C)) +
-
-    geom_smooth(method = "lm", formula = y ~ x, se = TRUE, fullrange = TRUE,
-                colour = "red", fill = "grey70", alpha = 0.5, linewidth = 0.7) +
+    # 신뢰구간 띠는 뺀다 — 결정론적 계산값 네 개의 회귀라 수치 예측의 불확실성이 아니다 (E-28).
+    # fullrange: 회귀선을 축 끝까지 늘인다 (기본은 자료 구간까지만).
+    geom_smooth(method = "lm", formula = y ~ x, se = FALSE, fullrange = TRUE,
+                colour = "red", linewidth = 0.7) +
     geom_point(colour = "black", size = 2.6) +
     annotate("text", x = 8.7, y = 8, hjust = 1, vjust = 0, size = 3.6,
              family = FONT, label = eqn(f4)) +
@@ -53,10 +58,12 @@ p4 <- ggplot(df, aes(x = length_m, y = spread_C)) +
     xlab("Ware chamber length (m)") +
     ylab(expression(bold(paste("Front-to-back temperature difference (", degree, "C)")))) +
     kiln_theme
-ggsave(here("./Results/Scatter(Spread_by_length).tiff"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Results/Scatter(Spread_by_length).jpeg"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("Results/figures/graphs/Scatter(Spread_by_length).tiff"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("Results/figures/graphs/Scatter(Spread_by_length).jpeg"), p4, dpi = 300, width = 5, height = 5, units = 'in', bg = "white", quality = 95)
 
+########## 3 x 4 ##########
+# 원고 그림은 PLOS 최대 폭 7.5 in 에 600 dpi 로 낸다 (E-26, R-08).
 fig <- p3 + p4 + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
     theme(plot.tag = element_text(family = FONT, size = 13, face = "bold"))
-ggsave(here("./Results/Fig_Length.tiff"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", compression = "lzw")
-ggsave(here("./Results/Fig_Length.jpeg"), fig, dpi = 300, width = 10, height = 5, units = 'in', bg = "white", quality = 95)
+ggsave(here("Results/figures/graphs/Fig_Length.tiff"), fig, dpi = 600, width = 7.5, height = 4, units = 'in', bg = "white", compression = "lzw")
+ggsave(here("Results/figures/graphs/Fig_Length.jpeg"), fig, dpi = 600, width = 7.5, height = 4, units = 'in', bg = "white", quality = 95)

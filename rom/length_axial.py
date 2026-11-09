@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
+"""
+비교 2 (개정) — 소성실 축방향 온도와 유효 소성용적
+
+`length_study.py` 는 소성실을 노드 하나로 뭉뚱그려서 "뒤쪽이 안 익는다" 는
+현상을 **원리적으로 표현할 수 없었다.** 소성부를 1 m 남짓 구간으로 쪼개
+각 구간의 온도를 계산한다 (`geom.extract(seg_m=)`).
+
+산출
+  구간별 온도 이력
+  유효 소성구간 = 1,000 ℃ 이상인 구간의 길이 (도질토기 소성 하한)
+  유효 용적당 연료  → 길이를 늘리는 것이 언제까지 이득인가
+"""
 import os
-import sys
 
 import calibrate
 import efficiency
@@ -9,19 +20,25 @@ import rom
 import run
 
 SEG_M = 1.0
-TAG = os.environ.get("TAG", "")
+TAG = os.environ.get("TAG", "")          # 출력 파일 접미사
 rom_rr = float(os.environ.get("RAD_RANGE", "1.0"))
+# 기본값은 rom.py 가 정한다. 여기서 0.0 을 따로 기본으로 두었더니 빈 가마로
+# 돌아가 결과가 본문과 모순됐다 (뒤끝 978 ℃ vs 본문 1,055 ℃).
+# 빈 가마 판이 필요하면 LOAD_FRAC=0 BLOCK_FRAC=0 TAG=_empty 로 명시할 것.
+# (투고본의 '빈 가마 대비 0.4–1.1 %' 는 이 설정이다 — 적재와 복사 차폐를 함께 0 으로 둔다.)
 LOAD = float(os.environ.get("LOAD_FRAC", rom.LOAD_FRAC))
 BLOCK = os.environ.get("BLOCK_FRAC", rom.BLOCK_FRAC)
-T_FIRE = 1000.0
+T_FIRE = 1000.0                 # 도질토기 소성 하한 [℃]
 LENS = [("B_L025", 2.5), ("B_L045", 4.5), ("B_L065", 6.5), ("B_L085", 8.5)]
-FRAME_H = 1.0
+FRAME_H = 1.0                   # 프레임 간격 [h]
 
 
 def run_one(model, fit, sched, ts, Ts, frames=None):
+    """연료 역산 후, 확정된 발열로 다시 전진하며 축방향 온도를 기록한다."""
     k, rows, info = efficiency.demand(model, fit, sched, ts, Ts, seg_m=SEG_M)
     fuel = sum(r["fuel"] for r in rows)
 
+    # 확정된 구간별 발열률로 재현 (프레임 수집용)
     k2, _ = calibrate.build(model, seg_m=SEG_M, T_amb=run.T_AMB)
     hist = []
     nxt = 0.0
@@ -36,6 +53,7 @@ def run_one(model, fit, sched, ts, Ts, frames=None):
 
 
 def eff_length(T, seg_len, n_ware):
+    """1,000 ℃ 이상인 소성부 길이 [m]. 구간 경계는 선형보간."""
     ware = T[1:1 + n_ware]
     tot = 0.0
     for i, t in enumerate(ware):
@@ -113,13 +131,14 @@ def main():
                     (r["model"], r["L"], r["fuel"], r["eff"], r["eff"] / r["L"],
                      r["fuel"] / r["eff"],
                      ",".join("%.1f" % x for x in (r["T"] + [0] * 12)[:12])))
+    # 프레임용 이력
     with open(os.path.join(run.RESULTS, "rom_length_axial_hist%s.csv" % TAG), "w") as f:
         f.write("model,t_h,node,T_C\n")
         for r in out:
             for th, Ts_ in r["hist"]:
                 for i, x in enumerate(Ts_):
                     f.write("%s,%.2f,%d,%.1f\n" % (r["model"], th, i, x))
-    print("\n→ Results/rom_length_axial.{txt,csv}, rom_length_axial_hist.csv")
+    print("\n→ Results/rom/rom_length_axial%s.{txt,csv}, rom_length_axial_hist%s.csv" % (TAG, TAG))
     return out
 
 

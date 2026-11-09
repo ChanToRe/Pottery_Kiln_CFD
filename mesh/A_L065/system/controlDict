@@ -1,0 +1,19 @@
+FoamFile { version 2.0; format ascii; class dictionary; object controlDict; }
+
+// 격자 생성 전용 (blockMesh → snappyHexMesh). 정상·비정상 케이스가 이 격자를 함께 쓴다.
+// 쓰기 형식·자릿수는 투고본 격자를 만들 때와 같아야 points 가 바이트 단위로 같아진다.
+application     snappyHexMesh;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         1;
+deltaT          1;
+writeControl    timeStep;
+writeInterval   1;
+purgeWrite      0;
+writeFormat     ascii;
+writePrecision  7;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable false;

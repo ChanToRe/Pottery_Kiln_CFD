@@ -1,0 +1,38 @@
+11-09 04:49:27  대기열 시작: 18 건, 예산 16
+11-09 04:49:27  시작 ×6 Results/checks/grid/transient/A_L065
+11-09 04:49:27  시작 ×6 Results/checks/grid/transient/B_L065
+11-09 04:49:27  시작 ×4 Results/checks/grid/steady/A_L065
+11-09 06:00:51  끝 rc=0 transient/B_L065  buoyantPimpleFoam ×6  완료 (마지막 시각 44.991138725126817)
+11-09 06:00:51  시작 ×6 Results/checks/grid/transient/C_L065
+11-09 06:03:11  끝 rc=0 transient/A_L065  buoyantPimpleFoam ×6  완료 (마지막 시각 45.004378339233796)
+11-09 06:03:11  시작 ×6 Results/checks/courant/A_co2
+11-09 07:02:54  끝 rc=0 steady/A_L065  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 07:02:54  시작 ×4 Results/checks/grid/steady/B_L065
+11-09 07:29:15  끝 rc=0 transient/C_L065  buoyantPimpleFoam ×6  완료 (마지막 시각 45.009163532255698)
+11-09 07:29:15  시작 ×6 Results/checks/courant/B_co2
+11-09 07:55:17  끝 rc=0 courant/A_co2  buoyantPimpleFoam ×6  완료 (마지막 시각 45.0022686540486063)
+11-09 07:55:17  시작 ×6 Results/checks/courant/C_co2
+11-09 09:13:01  끝 rc=0 steady/B_L065  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 09:13:01  시작 ×4 Results/checks/grid/steady/C_L065
+11-09 09:32:02  끝 rc=0 courant/B_co2  buoyantPimpleFoam ×6  완료 (마지막 시각 44.999007794980443)
+11-09 09:32:02  시작 ×4 Results/checks/oppoint/A_L065_q449
+11-09 10:13:04  끝 rc=0 oppoint/A_L065_q449  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 10:13:04  시작 ×4 Results/checks/oppoint/B_L065_q449
+11-09 10:48:26  끝 rc=0 steady/C_L065  buoyantSimpleFoam ×4  완료 (마지막 시각 12000)
+11-09 10:48:26  시작 ×4 Results/checks/oppoint/C_L065_q449
+11-09 10:55:47  끝 rc=0 oppoint/B_L065_q449  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 10:55:47  시작 ×4 Results/checks/oppoint/A_L065_q245
+11-09 11:20:48  끝 rc=0 oppoint/C_L065_q449  buoyantSimpleFoam ×4  완료 (마지막 시각 12000)
+11-09 11:20:48  시작 ×4 Results/checks/oppoint/B_L065_q245
+11-09 11:33:29  끝 rc=0 oppoint/A_L065_q245  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 11:33:29  시작 ×4 Results/checks/oppoint/C_L065_q245
+11-09 11:46:29  끝 rc=0 courant/C_co2  buoyantPimpleFoam ×6  완료 (마지막 시각 44.999867810494322)
+11-09 11:46:29  시작 ×4 Results/checks/oppoint/A_L065_q082
+11-09 11:46:29  시작 ×4 Results/checks/oppoint/B_L065_q082
+11-09 12:05:10  끝 rc=0 oppoint/B_L065_q245  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 12:05:10  시작 ×4 Results/checks/oppoint/C_L065_q082
+11-09 12:10:11  끝 rc=0 oppoint/C_L065_q245  buoyantSimpleFoam ×4  완료 (마지막 시각 12000)
+11-09 12:28:32  끝 rc=0 oppoint/A_L065_q082  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 12:29:12  끝 rc=0 oppoint/B_L065_q082  buoyantSimpleFoam ×4  완료 (마지막 시각 15000)
+11-09 12:31:32  끝 rc=0 oppoint/C_L065_q082  buoyantSimpleFoam ×4  완료 (마지막 시각 12000)
+11-09 12:31:32  대기열 끝 (실패 0)

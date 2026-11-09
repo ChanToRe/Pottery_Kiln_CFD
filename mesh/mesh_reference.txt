@@ -1,0 +1,5 @@
+# 투고본 계산에 쓴 격자의 기준값 (make_mesh.sh 가 대조한다)
+# model  nCells  md5(constant/polyMesh/points)
+A_L065 52755 2b1da3bb
+B_L065 55512 65c51d6a
+C_L065 55419 35e49826

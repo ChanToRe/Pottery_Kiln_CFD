@@ -1,0 +1,37 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| 백제 한성기 토기가마 CFD (Last_Version)                                       |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions [0 0 -1 0 0 0 0];
+
+internalField uniform 1.0;
+
+boundaryField
+{
+    inlet
+    {
+        type                    inletOutlet;
+        inletValue              uniform 1.0;
+        value                   uniform 1.0;
+    }
+    outlet
+    {
+        type                    inletOutlet;
+        inletValue              uniform 1.0;
+        value                   uniform 1.0;
+    }
+    walls
+    {
+        type                    omegaWallFunction;
+        value                   uniform 1.0;
+    }
+}
